@@ -59,7 +59,7 @@ bool GDriveUpdate::updateCheck()
 {
   HTTPClient https;
   String urls ="https://www.googleapis.com/drive/v2/files?corpus=DOMAIN&orderBy=createdDate+desc&maxResults=1&";
-  urls += "q=%27"+_folder_id+"%27+in+parents&access_token="+oauth.getToken();
+  urls += "q=%27"+_folder_id+"%27+in+parents+and+trashed%3Dfalse&access_token="+oauth.getToken();
   DEBUG("[GDRIVEUPDATE] URL:%s\n",urls.c_str());  
   https.begin(urls,_finger);
   https.setUserAgent("Mozilla/5.0 (Windows NT 6.3; WOW64)");
