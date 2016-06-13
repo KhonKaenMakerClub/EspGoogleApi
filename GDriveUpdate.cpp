@@ -91,7 +91,7 @@ bool GDriveUpdate::updateCheck()
     https.end();
     firmware_url = getDownloadUrl(firmware_url);
     DEBUG("[GDRIVEUPDATE] download redirect to : %s\n", firmware_url.c_str());
-    DEBUG("!!!![Update Found ]!!!!\n");       
+    Serial.printf("!!!![Update Found ]!!!!\n");       
     updateFirmware(id,firmware_url);
   }
   return true;
