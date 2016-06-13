@@ -78,7 +78,7 @@ bool GDriveUpdate::updateCheck()
     }    
   }
   WiFiClient * stream = https.getStreamPtr();
-  stripStream("id\": \"",stream,-1);
+  if(stripStream("id\": \"",stream,-1)){ return false;}
   String id = stream->readStringUntil('\"');
   stripStream("createdDate\": \"",stream,-1);
   String create_date = stream->readStringUntil('\"');  

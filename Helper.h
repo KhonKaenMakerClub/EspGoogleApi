@@ -27,7 +27,7 @@ inline bool stripStream(String terminate,Stream *s,int len)
   int rcount = 0;
   int l = terminate.length();
   bool f = false;  
-  unsigned long st = millis() + (40*1000);
+  unsigned long st = millis() + (3*1000);
   while(found == false && millis() < st){
     while(s->read() != terminate[ix]){
       if(len != -1 && rcount > len) return false;
