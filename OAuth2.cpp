@@ -77,11 +77,11 @@ bool OAuth2::oauth(String client_id, String client_secret,String scope)
     payload = "client_id="+_client_id+"&client_secret="+_client_secret+"&code="+device_code+"&grant_type=http://oauth.net/grant_type/device/1.0";
     httpCode = http.POST(payload);
     if(httpCode <= 0) {
-      DEBUG(".");      
+      Serial.printf(".");      
       continue;
     }
     if(httpCode != HTTP_CODE_OK) {
-      DEBUG(".");       
+      Serial.printf(".");       
       continue;
     }
     String resp = http.getString();
