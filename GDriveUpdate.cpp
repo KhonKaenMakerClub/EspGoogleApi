@@ -78,7 +78,13 @@ bool GDriveUpdate::updateCheck()
     }    
   }
   WiFiClient * stream = https.getStreamPtr();
-  if(stripStream("id\": \"",stream,-1)){ return false;}
+  stripStream("items\": [",stream,-1);
+  if(stream->read() == "]"){//not found
+    DEBUG("[GDRIVEUPDATE] Firmware not found\n");
+    https.end();
+    return false;
+  }
+  stripStream("id\": \"",stream,-1);
   String id = stream->readStringUntil('\"');
   stripStream("createdDate\": \"",stream,-1);
   String create_date = stream->readStringUntil('\"');  
