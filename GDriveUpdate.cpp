@@ -79,7 +79,7 @@ bool GDriveUpdate::updateCheck()
   }
   WiFiClient * stream = https.getStreamPtr();
   stripStream("items\": [",stream,-1);
-  if(stream->read() == "]"){//not found
+  if(stream->read() == ']'){//not found
     DEBUG("[GDRIVEUPDATE] Firmware not found\n");
     https.end();
     return false;
