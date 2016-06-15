@@ -23,7 +23,7 @@ bool GDriveUpdate::begin(String client_id, String client_secret,String folder_id
 {
   SPIFFS.begin();
   _folder_id = folder_id;  
-  if(!loadConfig()){
+  if(!loadConfig() || renew_token){
     int retry = 5;
     while(!oauth.oauth(client_id, client_secret,_scope)){
       DEBUG("[GDRIVEUPDATE] Cannot OAuth retry %d ...\n",retry);
