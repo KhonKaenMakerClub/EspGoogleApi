@@ -31,7 +31,7 @@ public:
     {
       static int led_stage = 0;
       led_stage = !led_stage;
-      digitalWrite(16,led_stage);
+      digitalWrite(BUILTIN_LED,led_stage);
     }
     GDriveUpdate(void);
     ~GDriveUpdate(void);

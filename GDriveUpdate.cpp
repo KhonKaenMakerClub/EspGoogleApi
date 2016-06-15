@@ -123,10 +123,10 @@ bool GDriveUpdate::updateFirmware(String id,String url)
 {
   if(_led_debug)
   {
-    pinMode(16,OUTPUT);
-    digitalWrite(16,HIGH); delay(200); digitalWrite(16,LOW); delay(200);
-    digitalWrite(16,HIGH); delay(200); digitalWrite(16,LOW); delay(200);
-    digitalWrite(16,HIGH); delay(200); digitalWrite(16,LOW); delay(200);
+    pinMode(BUILTIN_LED,OUTPUT);
+    digitalWrite(BUILTIN_LED,HIGH); delay(200); digitalWrite(BUILTIN_LED,LOW); delay(200);
+    digitalWrite(BUILTIN_LED,HIGH); delay(200); digitalWrite(BUILTIN_LED,LOW); delay(200);
+    digitalWrite(BUILTIN_LED,HIGH); delay(200); digitalWrite(BUILTIN_LED,LOW); delay(200);
     led_ticker.attach(0.1,ledBlink);
   }
   ESPhttpUpdate.rebootOnUpdate(false);
