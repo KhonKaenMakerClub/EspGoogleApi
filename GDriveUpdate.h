@@ -31,7 +31,7 @@ public:
     {
       static int led_stage = 0;
       led_stage = !led_stage;
-      digitalWrite(D0,led_stage);
+      digitalWrite(16,led_stage);
     }
     GDriveUpdate(void);
     ~GDriveUpdate(void);
@@ -53,7 +53,9 @@ private:
     String _scope = "https://docs.google.com/feeds/,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/drive.file";
     String _folder_id = "";
     String _last_firmware_id = "";
-         
+    String _token = "";
+    String _refresh_token = "";
+
     String getDownloadUrl(String url);
     int _refresh_rate = 10; //10 sec per request
     unsigned long _last_time = 0;    

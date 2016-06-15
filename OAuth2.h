@@ -24,13 +24,11 @@ class OAuth2
 {
 public:
     OAuth2(void);
-    ~OAuth2(void);    
-    bool begin();
+    ~OAuth2(void);
     bool oauth(String client_id, String client_secret,String scope);
     bool refreshToken();
-    bool loadConfig();
-    bool writeConfig();
     String getToken();
+    String getRefreshToken();
     bool removeToken();
     void setToken(String token);
 private:

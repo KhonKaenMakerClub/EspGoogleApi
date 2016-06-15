@@ -19,20 +19,6 @@ OAuth2::OAuth2(void)
 OAuth2::~OAuth2(void)
 {
 }
-bool OAuth2::begin()
-{
-  if(!SPIFFS.begin()) {
-    DEBUG("[OAuth2] Failed to mount file system");
-    return false;
-  } 
-  loadConfig();
-  return true;
-}
-bool OAuth2::removeToken()
-{  
-  _token = "";
-  return SPIFFS.remove("/oauth.config");
-}
 bool OAuth2::oauth(String client_id, String client_secret,String scope)
 {  
   _client_id = client_id;
@@ -106,7 +92,6 @@ bool OAuth2::oauth(String client_id, String client_secret,String scope)
     delay(100);
     //-------------------------//
     if(_token != "" && _refresh_token != "" && _token_time != 0 && _token_type != ""){
-      writeConfig();
       return true;
     }
   }
@@ -136,49 +121,20 @@ bool OAuth2::refreshToken()
   //---------
   if(_token != "" && _token_time != 0 && _token_type != "")
   {
-    writeConfig();
     return true;
   }
   return false;
-}
-bool OAuth2::loadConfig()
-{
-  File f = SPIFFS.open("/oauth.config", "r+");
-  if (!f) {
-      DEBUG("[OAuth2] file open failed\n");
-      return false;
-  }  
-  _token = f.readStringUntil(';');
-  _refresh_token = f.readStringUntil(';');
-    
-  DEBUG("[OAuth2]Load Config token: %s\n",_token.c_str());
-  DEBUG("[OAuth2]Load Config refresh_token : %s\n",_refresh_token.c_str());
-  f.close();
-  if(_token != "" && _refresh_token != ""){
-    return true;
-  }
-  return false;
-}
-bool OAuth2::writeConfig()
-{
-  DEBUG("[OAuth2] Save Config token : %s\n",_token.c_str());
-  DEBUG("[OAuth2] Save Config refresh token : %s\n",_refresh_token.c_str());
-  File f = SPIFFS.open("/oauth.config", "w+");
-  if (!f) {
-      DEBUG("[OAuth2] file open failed");
-      return false;
-  }
-  f.print(_token+";");
-  f.print(_refresh_token+";");
-  f.close();
-  return true;
 }
 String OAuth2::getToken()
 {
   return _token;
 }
+String OAuth2::getRefreshToken()
+{
+  return _refresh_token;
+}
 void OAuth2::setToken(String token)
 {
   _token = token;
-  writeConfig();
+  //writeConfig();
 }

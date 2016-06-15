@@ -21,16 +21,23 @@ GDriveUpdate::~GDriveUpdate(void)
 }
 bool GDriveUpdate::begin(String client_id, String client_secret,String folder_id,bool renew_token)
 {
-  oauth.begin();
+  SPIFFS.begin();
   _folder_id = folder_id;  
-  if(oauth.getToken() == "" || renew_token){
-    if(!oauth.oauth(client_id, client_secret,_scope)){
-      DEBUG("[GDRIVEUPDATE] Cannot OAuth ...\n");
-      return false;
+  if(!loadConfig()){
+    int retry = 5;
+    while(!oauth.oauth(client_id, client_secret,_scope)){
+      DEBUG("[GDRIVEUPDATE] Cannot OAuth retry %d ...\n",retry);
+      if(retry < 0){
+        DEBUG("[GDRIVEUPDATE] Cannot OAuth timeout...\n");
+        return false;
+      }
+      retry--;
     }
+    _token = oauth.getToken();
+    _refresh_token = oauth.getRefreshToken();
+    writeConfig();
   }
-  oauth.getToken();
-  loadConfig();
+    
   _last_time = millis();
   return true;
 }
@@ -45,7 +52,13 @@ bool GDriveUpdate::run()
 }
 bool GDriveUpdate::renewToken()
 {
-  return oauth.removeToken();
+  bool res = oauth.removeToken();
+  if(res){
+    _token = oauth.getToken();
+    _refresh_token = oauth.getRefreshToken();
+    writeConfig();
+  }
+  return res;
 }
 void GDriveUpdate::setLedDebug(bool enable)
 {
@@ -59,7 +72,7 @@ bool GDriveUpdate::updateCheck()
 {
   HTTPClient https;
   String urls ="https://www.googleapis.com/drive/v2/files?corpus=DOMAIN&orderBy=createdDate+desc&maxResults=1&";
-  urls += "q=%27"+_folder_id+"%27+in+parents+and+trashed%3Dfalse&access_token="+oauth.getToken();
+  urls += "q=%27"+_folder_id+"%27+in+parents+and+trashed%3Dfalse&access_token="+_token;
   DEBUG("[GDRIVEUPDATE] URL:%s\n",urls.c_str());  
   https.begin(urls,_finger);
   https.setUserAgent("Mozilla/5.0 (Windows NT 6.3; WOW64)");
@@ -74,6 +87,9 @@ bool GDriveUpdate::updateCheck()
     if(httpCode == 401 || httpCode == 403){
       https.end();
       oauth.refreshToken();
+      _token = oauth.getToken();
+      _refresh_token = oauth.getRefreshToken();
+      writeConfig();
       return false;
     }    
   }
@@ -89,7 +105,7 @@ bool GDriveUpdate::updateCheck()
   stripStream("createdDate\": \"",stream,-1);
   String create_date = stream->readStringUntil('\"');  
   String firmware_url = "https://www.googleapis.com/drive/v2/files/";
-  firmware_url += id+"?alt=media&access_token="+oauth.getToken();
+  firmware_url += id+"?alt=media&access_token="+_token;
   DEBUG("[GDRIVEUPDATE] id : %s\n", id.c_str());
   DEBUG("[GDRIVEUPDATE] createdDate : %s\n", create_date.c_str());
   DEBUG("[GDRIVEUPDATE] download : %s\n", firmware_url.c_str());
@@ -107,10 +123,10 @@ bool GDriveUpdate::updateFirmware(String id,String url)
 {
   if(_led_debug)
   {
-    pinMode(D0,OUTPUT);
-    digitalWrite(D0,HIGH); delay(200); digitalWrite(D0,LOW); delay(200);
-    digitalWrite(D0,HIGH); delay(200); digitalWrite(D0,LOW); delay(200);
-    digitalWrite(D0,HIGH); delay(200); digitalWrite(D0,LOW); delay(200);
+    pinMode(16,OUTPUT);
+    digitalWrite(16,HIGH); delay(200); digitalWrite(16,LOW); delay(200);
+    digitalWrite(16,HIGH); delay(200); digitalWrite(16,LOW); delay(200);
+    digitalWrite(16,HIGH); delay(200); digitalWrite(16,LOW); delay(200);
     led_ticker.attach(0.1,ledBlink);
   }
   ESPhttpUpdate.rebootOnUpdate(false);
@@ -138,10 +154,14 @@ bool GDriveUpdate::loadConfig()
       DEBUG("[GDRIVEUPDATE] file open failed\n");
       return false;
   }
-  _last_firmware_id = f.readStringUntil(';');    
+  _last_firmware_id = f.readStringUntil(';');
+  _token = f.readStringUntil(';');
+  _refresh_token = f.readStringUntil(';');  
   DEBUG("[GDRIVEUPDATE]Load Config firmware id : %s\n",_last_firmware_id.c_str());  
+  DEBUG("[GDRIVEUPDATE]Load Config token : %s\n",_token.c_str());  
+  DEBUG("[GDRIVEUPDATE]Load Config refreshToken : %s\n",_refresh_token.c_str());  
   f.close();
-  if(_last_firmware_id != ""){
+  if(/*_last_firmware_id != "" && */ _token != "" && _refresh_token != ""){
     return true;
   }
   return false;
@@ -149,12 +169,16 @@ bool GDriveUpdate::loadConfig()
 bool GDriveUpdate::writeConfig()
 {
   DEBUG("[GDRIVEUPDATE] Save Config firmware id : %s\n",_last_firmware_id.c_str());  
+  DEBUG("[GDRIVEUPDATE] Save Config token : %s\n",_token.c_str());  
+  DEBUG("[GDRIVEUPDATE] Save Config refreshToken : %s\n",_refresh_token.c_str());  
   File f = SPIFFS.open("/gdriveupdate.config", "w+");
   if (!f) {
-      DEBUG("[GDRIVEUPDATE] file open failed");
+      DEBUG("[GDRIVEUPDATE] file open failed\n");
       return false;
   }
-  f.print(_last_firmware_id+";");  
+  f.print(_last_firmware_id+";");
+  f.print(_token+";");
+  f.print(_refresh_token+";");
   f.close();
   return true;
 }
