@@ -25,9 +25,10 @@ bool GSheets::begin(String client_id, String client_secret,String sheet_id,bool 
 {
   SPIFFS.begin();
   _sheet_id = sheet_id;
+  oauth.init(client_id,client_secret,_scope);
   if(!loadConfig() || renew_token){
     int retry = 5;
-    while(!oauth.oauth(client_id, client_secret,_scope)){
+    while(!oauth.oauth()){
       DEBUG("[GSHEET] Cannot OAuth retry %d ...\n",retry);
       if(retry < 0){
         DEBUG("[GSHEET] Cannot OAuth timeout...\n");
@@ -39,6 +40,8 @@ bool GSheets::begin(String client_id, String client_secret,String sheet_id,bool 
     _refresh_token = oauth.getRefreshToken();
     writeConfig();
   }
+  oauth.setToken(_token);
+  oauth.setRefreshToken(_refresh_token);
   return true;
 }
 bool GSheets::renewToken()
@@ -59,7 +62,7 @@ bool GSheets::loadConfig()
       return false;
   }  
   _token = f.readStringUntil(';');
-  _refresh_token = f.readStringUntil(';');    
+  _refresh_token = f.readStringUntil(';');
   DEBUG("[GSHEET]Load Config token : %s\n",_token.c_str());  
   DEBUG("[GSHEET]Load Config refreshToken : %s\n",_refresh_token.c_str());  
   f.close();
@@ -89,10 +92,10 @@ void GSheets::addColumn(String columnName,String value)
 }
 bool GSheets::insertRow()
 {
-  HTTPClient http;
+  HTTPBypass http;
   String url ="https://spreadsheets.google.com/feeds/list/"+_sheet_id+"/od6/private/full?access_token="+_token;  
   DEBUG("[GSHEET] URL:%s\n",url.c_str());
-  http.begin(url,_selected_finger);
+  http.begin(url,_finger);
   http.setUserAgent("Mozilla/5.0 (Windows NT 6.3; WOW64)");  
   http.addHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
   http.addHeader("Content-Type","application/atom+xml");
@@ -101,19 +104,14 @@ bool GSheets::insertRow()
   DEBUG("[GSHEET] Payload : %s\n",payload.c_str());
   int httpCode = http.POST(payload);
   _atom_content = "";
-  if(httpCode <= 0) {
-    if(_selected_finger == _finger_sheet){ // Tricky i don't know why cert has change sometime- -"
-      _selected_finger = _finger_sheet2;
-    }else{
-      _selected_finger = _finger_sheet;
-    }
+  if(httpCode <= 0) {    
     DEBUG("[GSHEET] ... failed, error: %s\n", http.errorToString(httpCode).c_str());
     return false;
   }
   if(httpCode != 201) {
     DEBUG("[GSHEET] Error... code: %d\n", httpCode);
     if(httpCode == 401 || httpCode == 403){
-      http.end();
+      http.end();      
       oauth.refreshToken();
       _token = oauth.getToken();
       _refresh_token = oauth.getRefreshToken();

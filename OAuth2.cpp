@@ -19,21 +19,33 @@ OAuth2::OAuth2(void)
 OAuth2::~OAuth2(void)
 {
 }
-bool OAuth2::oauth(String client_id, String client_secret,String scope)
+bool OAuth2::init(String client_id, String client_secret,String scope)
 {  
+  init(client_id,client_secret,scope,"","");
+  return true;
+}
+bool OAuth2::init(String client_id, String client_secret, String scope, String token, String refresh_token)
+{
   _client_id = client_id;
   _client_secret = client_secret;
-  
-  HTTPClient http;
+  _scope = scope;
+  _token = token;
+  _refresh_token = refresh_token;
+  return true;
+}
+bool OAuth2::oauth()
+{  
+  HTTPBypass http;
   DEBUG("[OAuth2] Get user code ...\n");        
   http.begin("https://accounts.google.com/o/oauth2/device/code",_finger_ggac);
   http.setUserAgent("Mozilla/5.0 (Windows NT 6.3; WOW64)");
   http.addHeader("Content-Type","application/x-www-form-urlencoded");
   http.addHeader("Accept","text/html");
-  String payload = "client_id="+_client_id+"&scope="+scope;
+  String payload = "client_id="+_client_id+"&scope="+_scope;
+  DEBUG("[OAuth2] Auth : %s\n",payload.c_str());
   int httpCode = http.POST(payload);
   if(httpCode <= 0) {
-    DEBUG("[OAuth2]... failed, error: %s\n", http.errorToString(httpCode).c_str());
+    DEBUG("[OAuth2]... failed, error: %s\n", http.errorToString(httpCode).c_str());    
     return false;
   }
   if(httpCode != HTTP_CODE_OK) {
@@ -99,15 +111,17 @@ bool OAuth2::oauth(String client_id, String client_secret,String scope)
 }
 bool OAuth2::refreshToken()
 {
-  HTTPClient http;
+  HTTPBypass http;
   http.begin("https://www.googleapis.com/oauth2/v4/token",_finger);
   http.setUserAgent("Mozilla/5.0 (Windows NT 6.3; WOW64)");
   http.addHeader("Content-Type","application/x-www-form-urlencoded");
   http.addHeader("Accept","text/html");
+
   String payload = "client_id="+_client_id+"&client_secret="+_client_secret+"&refresh_token="+_refresh_token+"&grant_type=refresh_token";
+  DEBUG("[OAuth2] Renew token = %s\n",payload.c_str());
   int httpCode = http.POST(payload);
   if(httpCode <= 0) {
-    DEBUG("[OAuth2]... failed, error: %s\n", http.errorToString(httpCode).c_str());
+    DEBUG("[OAuth2]... failed, error: %s\n", http.errorToString(httpCode).c_str());    
     return false;
   }
   if(httpCode != HTTP_CODE_OK) {
@@ -137,4 +151,8 @@ void OAuth2::setToken(String token)
 {
   _token = token;
   //writeConfig();
+}
+void OAuth2::setRefreshToken(String refresh_token)
+{
+  _refresh_token = refresh_token;
 }

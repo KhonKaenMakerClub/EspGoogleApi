@@ -21,23 +21,27 @@ GDriveUpdate::~GDriveUpdate(void)
 }
 bool GDriveUpdate::begin(String client_id, String client_secret,String folder_id,bool renew_token)
 {
+  DEBUG("[GDRIVEUPDATE] begin with renew = %d and BUILTIN_LED=%d\n",renew_token,BUILTIN_LED);
   SPIFFS.begin();
-  _folder_id = folder_id;  
+  oauth.init(client_id,client_secret,_scope);
+  _folder_id = folder_id;
   if(!loadConfig() || renew_token){
     int retry = 5;
-    while(!oauth.oauth(client_id, client_secret,_scope)){
+    while(!oauth.oauth()){
       DEBUG("[GDRIVEUPDATE] Cannot OAuth retry %d ...\n",retry);
       if(retry < 0){
         DEBUG("[GDRIVEUPDATE] Cannot OAuth timeout...\n");
         return false;
       }
+      delay(1000);
       retry--;
     }
     _token = oauth.getToken();
-    _refresh_token = oauth.getRefreshToken();
+    _refresh_token = oauth.getRefreshToken();    
     writeConfig();
   }
-    
+  oauth.setToken(_token);
+  oauth.setRefreshToken(_refresh_token);
   _last_time = millis();
   return true;
 }
@@ -70,7 +74,7 @@ void GDriveUpdate::setRefreshRate(int rate)
 }
 bool GDriveUpdate::updateCheck()
 {
-  HTTPClient https;
+  HTTPBypass https;
   String urls ="https://www.googleapis.com/drive/v2/files?corpus=DOMAIN&orderBy=createdDate+desc&maxResults=1&";
   urls += "q=%27"+_folder_id+"%27+in+parents+and+trashed%3Dfalse&access_token="+_token;
   DEBUG("[GDRIVEUPDATE] URL:%s\n",urls.c_str());  
@@ -80,12 +84,13 @@ bool GDriveUpdate::updateCheck()
   int httpCode = https.GET();
   if(httpCode <= 0) {
     DEBUG("[GDRIVEUPDATE] ... failed, error: %s\n", https.errorToString(httpCode).c_str());
+    // try to change the certificate fingerprint     
     return false;
   }
   if(httpCode != HTTP_CODE_OK) {
     DEBUG("[GDRIVEUPDATE] Error... code: %d\n", httpCode);
     if(httpCode == 401 || httpCode == 403){
-      https.end();
+      https.end();      
       oauth.refreshToken();
       _token = oauth.getToken();
       _refresh_token = oauth.getRefreshToken();
@@ -110,10 +115,10 @@ bool GDriveUpdate::updateCheck()
   DEBUG("[GDRIVEUPDATE] createdDate : %s\n", create_date.c_str());
   DEBUG("[GDRIVEUPDATE] download : %s\n", firmware_url.c_str());
   if(id != _last_firmware_id){
+    Serial.printf("!!!![Update Found ]!!!!\n");
     https.end();
     firmware_url = getDownloadUrl(firmware_url);
-    DEBUG("[GDRIVEUPDATE] download redirect to : %s\n", firmware_url.c_str());
-    Serial.printf("!!!![Update Found ]!!!!\n");       
+    //DEBUG("[GDRIVEUPDATE] download redirect to : %s\n", firmware_url.c_str());
     updateFirmware(id,firmware_url);
   }
   return true;
@@ -129,11 +134,11 @@ bool GDriveUpdate::updateFirmware(String id,String url)
     digitalWrite(BUILTIN_LED,HIGH); delay(200); digitalWrite(BUILTIN_LED,LOW); delay(200);
     led_ticker.attach(0.1,ledBlink);
   }
-  ESPhttpUpdate.rebootOnUpdate(false);
-  t_httpUpdate_return  ret = ESPhttpUpdate.update(url,"0",_finger_file);  
+  bypassUpdate.rebootOnUpdate(false);
+  t_httpUpdate_return  ret = bypassUpdate.update(url,"0",_finger_file);  
   switch(ret) {
     case HTTP_UPDATE_FAILED:
-      DEBUG("[GDRIVEUPDATE] HTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+      DEBUG("[GDRIVEUPDATE] HTTP_UPDATE_FAILD Error (%d): %s", bypassUpdate.getLastError(), bypassUpdate.getLastErrorString().c_str());
       break;
     case HTTP_UPDATE_NO_UPDATES:
       DEBUG("[GDRIVEUPDATE] HTTP_UPDATE_NO_UPDATES");
@@ -185,18 +190,21 @@ bool GDriveUpdate::writeConfig()
 
 String GDriveUpdate::getDownloadUrl(String url)
 {
-  HTTPClient http;
-  http.begin(url,_finger);  
-  const char * headerkeys[] = { "Location" };
-  size_t headerkeyssize = sizeof(headerkeys) / sizeof(char*);
-  http.collectHeaders(headerkeys, headerkeyssize);
-  http.setUserAgent("Mozilla/5.0 (Windows NT 6.3; WOW64)");
-  http.addHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-  int httpCode = http.GET();
-  if(http.hasHeader("Location")){
-    http.end();
-    return http.header("Location");  
-  }
+  HTTPBypass http;  
+  do{
+    http.begin(url,_finger_file);  
+    const char * headerkeys[] = { "Location" };
+    size_t headerkeyssize = sizeof(headerkeys) / sizeof(char*);
+    http.collectHeaders(headerkeys, headerkeyssize);
+    http.setUserAgent("Mozilla/5.0 (Windows NT 6.3; WOW64)");
+    http.addHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+    int httpCode = http.GET();
+    if(http.hasHeader("Location")){
+      url = http.header("Location");
+      DEBUG("[GDRIVEUPDATE] REDIRECT... DOWNLOAD FILE!\n");
+    }
+    delay(1000);
+  }while(!http.hasHeader("Location"));  
   http.end();
-  return url;  
+  return url;
 }
