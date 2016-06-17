@@ -92,7 +92,7 @@ bool GSheets::insertRow()
   HTTPClient http;
   String url ="https://spreadsheets.google.com/feeds/list/"+_sheet_id+"/od6/private/full?access_token="+_token;  
   DEBUG("[GSHEET] URL:%s\n",url.c_str());
-  http.begin(url,_selected_finger);
+  http.begin(url,_finger);
   http.setUserAgent("Mozilla/5.0 (Windows NT 6.3; WOW64)");  
   http.addHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
   http.addHeader("Content-Type","application/atom+xml");
@@ -101,12 +101,7 @@ bool GSheets::insertRow()
   DEBUG("[GSHEET] Payload : %s\n",payload.c_str());
   int httpCode = http.POST(payload);
   _atom_content = "";
-  if(httpCode <= 0) {
-    if(_selected_finger == _finger_sheet){ // Tricky i don't know why cert has change sometime- -"
-      _selected_finger = _finger_sheet2;
-    }else{
-      _selected_finger = _finger_sheet;
-    }
+  if(httpCode <= 0) {    
     DEBUG("[GSHEET] ... failed, error: %s\n", http.errorToString(httpCode).c_str());
     return false;
   }

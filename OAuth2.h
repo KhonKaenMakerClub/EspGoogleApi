@@ -32,8 +32,8 @@ public:
     bool removeToken();
     void setToken(String token);
 private:
-    const String _finger = "f4 26 6b 8f df 92 5b 24 8b 01 80 59 6b 43 07 e5 62 bb 36 a9";    
-    const String _finger_ggac = "4B 9A AA 36 1F 1A DC 64 FB 42 0F E6 02 4C EE A3 F8 05 AA 91";
+    const String _finger = "3D:49:7F:D9:3E:17:0E:2A:0F:D8:AC:1F:83:63:8B:29:ED:27:44:2F";    
+    const String _finger_ggac = "AF:1D:99:E2:D3:E3:DE:73:4E:0A:60:E5:37:4C:F4:8C:4D:D0:E6:D4";
     String _client_id = "";
     String _client_secret = "";
     

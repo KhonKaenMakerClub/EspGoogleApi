@@ -47,8 +47,8 @@ public:
 private:    
     
     OAuth2 oauth;
-    const String _finger = "f4 26 6b 8f df 92 5b 24 8b 01 80 59 6b 43 07 e5 62 bb 36 a9";
-    const String _finger_file = "1a ce 5b d0 8f 50 4e c4 be e2 66 33 b0 2f 1c d8 b1 35 d5 0e"; //usercontents   
+    const String _finger = "3D:49:7F:D9:3E:17:0E:2A:0F:D8:AC:1F:83:63:8B:29:ED:27:44:2F";
+    const String _finger_file = "A3:6A:B9:04:E1:7D:0B:80:AC:E8:4E:AB:1A:17:0A:C4:99:BA:0C:3F"; //usercontents   
     
     String _scope = "https://docs.google.com/feeds/,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/drive.file";
     String _folder_id = "";

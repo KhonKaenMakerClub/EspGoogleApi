@@ -38,13 +38,7 @@ public:
 private:    
     
     OAuth2 oauth;
-    const String _finger = "f4 26 6b 8f df 92 5b 24 8b 01 80 59 6b 43 07 e5 62 bb 36 a9";
-    const String _finger_sheet ="CA 13 6A C7 78 96 37 79 66 1A AE 43 A5 EE F0 67 59 6A E7 64";   
-    const String _finger_sheet2 ="4B 28 4E 4C 36 AF 7C AF 51 49 C2 51 D3 D9 FC E5 62 47 E1 7A";  
-                                //4B 28 4E 4C 36 AF 7C AF 51 49 C2 51 D3 D9 FC E5 62 47 E1 7A 
-                                  //CA 13 6A C7 78 96 37 79 66 1A AE 43 A5 EE F0 67 59 6A E7 64
-                                //4B 28 4E 4C 36 AF 7C AF 51 49 C2 51 D3 D9 FC E5 62 47 E1 7A
-    String _selected_finger = "CA 13 6A C7 78 96 37 79 66 1A AE 43 A5 EE F0 67 59 6A E7 64";
+    const String _finger = "6B:55:4F:08:78:6D:81:1E:DC:21:B9:D1:5F:5B:64:6E:87:59:75:8B";
     const String _scope = "https://spreadsheets.google.com/feeds";    
     String _sheet_id = "";
     String _atom_content = "";
