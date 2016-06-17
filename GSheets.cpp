@@ -104,7 +104,7 @@ bool GSheets::insertRow()
   DEBUG("[GSHEET] Payload : %s\n",payload.c_str());
   int httpCode = http.POST(payload);
   _atom_content = "";
-  if(httpCode <= 0) {    
+  if(httpCode <= 0) {
     DEBUG("[GSHEET] ... failed, error: %s\n", http.errorToString(httpCode).c_str());
     return false;
   }
