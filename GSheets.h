@@ -15,11 +15,11 @@
 #define GSHEETS_H_
 
 #include <Arduino.h>
-#include <ESP8266HTTPClient.h>
+#include "HTTPBypass.h"
 #include "FS.h"
 #include "OAuth2.h"
 #include "Helper.h"
-#define DEBUG(...) //Serial.printf( __VA_ARGS__ )
+#define DEBUG(...) Serial.printf( __VA_ARGS__ )
 
 class GSheets
 {
@@ -38,7 +38,11 @@ public:
 private:    
     
     OAuth2 oauth;
+<<<<<<< HEAD
     const String _finger = "6B:55:4F:08:78:6D:81:1E:DC:21:B9:D1:5F:5B:64:6E:87:59:75:8B";
+=======
+    const String _finger = "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00";
+>>>>>>> refs/remotes/origin/bypass
     const String _scope = "https://spreadsheets.google.com/feeds";    
     String _sheet_id = "";
     String _atom_content = "";
