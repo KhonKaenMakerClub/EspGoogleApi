@@ -22,7 +22,7 @@
 #include "OAuth2.h"
 #include "Helper.h"
 
-#define DEBUG(...) Serial.printf( __VA_ARGS__ )
+#define DEBUG(...) //Serial.printf( __VA_ARGS__ )
 
 class GDriveUpdate
 {
