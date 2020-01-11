@@ -53,11 +53,13 @@ bool OAuth2::oauth()
     return false;
   }
   String resp = http.getString();
-  String device_code = strip(resp,"device_code\" : \"","\"");
-  String user_code = strip(resp,"user_code\" : \"","\"");
-  String url = strip(resp,"verification_url\" : \"","\"");
-  int expire = strip(resp,"expires_in\" : ",",").toInt();  
-  int interval = strip(resp,"interval\" : ","\n").toInt();
+
+  String device_code = strip(resp, "device_code\": \"", "\"");
+  String user_code = strip(resp,"user_code\": \"","\"");
+  String url = strip(resp,"verification_url\": \"","\"");
+  int expire = strip(resp,"expires_in\": ",",").toInt();
+  int interval = strip(resp,"interval\": ","\n").toInt(); 
+  
   Serial.printf("\n[OAuth 2.0 Alert!]\n");
   Serial.printf("[=== Attension ===]\n");
   Serial.printf("[1. Open => \"%s\" \n",url.c_str());
